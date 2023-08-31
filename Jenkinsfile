@@ -7,6 +7,7 @@ pipeline {
                 script {
                     lastCommitInfo = sh(script: "git log -1", returnStdout: true).trim()
                     commitContainsSkip = sh(script: "git log -1 | grep 'skip ci'", returnStatus: true)
+                    println "commitContainsSkip value: ${commitContainsSkip}" // Add this line
                     slackMessage = "${env.JOB_NAME} ${env.BRANCH_NAME} received a new commit. :java: \nHere is commmit info: ${lastCommitInfo}\n*Console Output*: <${BUILD_URL}/console | (Open)>"
                     //send slack notification of new commit
                     slack_send(slackMessage)
