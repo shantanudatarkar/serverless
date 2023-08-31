@@ -94,7 +94,7 @@ pipeline {
             slack_send("${env.BRANCH_NAME} Something went wrong.Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
         }
     } //post
-}
+
 
 def slack_send(slackMessage, messageColor = "good") {
     slackSend channel: slack_channel, color: messageColor, message: slackMessage, teamDomain: slack_teamDomain, tokenCredentialId: slack_token_cred_id, username: 'Jenkins'
