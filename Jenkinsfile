@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'serverless'
+        label any
     }
     stages {
         stage('Init') {
