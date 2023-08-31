@@ -6,13 +6,13 @@ pipeline {
             steps {
                 script {
                     lastCommitInfo = sh(script: "git log -1", returnStdout: true).trim()
-                    commitContainsSkip = sh(script: "git log -1 | grep 'skip ci'", returnStatus: true)
+                    commitContainsSkip = sh(script: "git log -1 | grep -c 'skip ci'", returnStatus: true).trim()
                     println "commitContainsSkip value: ${commitContainsSkip}" // Add this line
                     slackMessage = "${env.JOB_NAME} ${env.BRANCH_NAME} received a new commit. :java: \nHere is commmit info: ${lastCommitInfo}\n*Console Output*: <${BUILD_URL}/console | (Open)>"
                     //send slack notification of new commit
                     slack_send(slackMessage)
                     //if commit message contains skip ci
-                    if (commitContainsSkip == 0) {
+                       if (commitContainsSkip.toInteger() > 0) { // Changed this condition
                         skippingText = " Skipping Build for ${env.BRANCH_NAME} branch."
                         env.shouldBuild = false
                         currentBuild.result = 'ABORTED'
