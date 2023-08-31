@@ -5,12 +5,17 @@ pipeline {
         stage('Init') {
             steps {
                 script {
-                    lastCommitInfo = sh(script: "git log -1", returnStdout: true).trim()
+                    lastCommitInfo = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
                     slackMessage = "${env.JOB_NAME} ${env.BRANCH_NAME} received a new commit. :java: \nHere is commit info: ${lastCommitInfo}\n*Console Output*: <${BUILD_URL}/console | (Open)>"
                     //send slack notification of new commit
                     slack_send(slackMessage)
+
+                    if (lastCommitInfo.toLowerCase().contains('skip ci')) {
+                        currentBuild.result = 'ABORTED'
+                        error('Build skipped due to commit message')
+                    }
                 }
-            } //step end
+            }
         }
         stage('Install') {
             steps {
@@ -18,7 +23,6 @@ pipeline {
                 sh 'sudo npm install -g serverless'
             }
         }
-
         stage('Install Plugin') {
             steps {
                 slack_send("Installing Plugins")
@@ -28,26 +32,23 @@ pipeline {
                 sh 'serverless plugin install -n serverless-enable-api-logs'
             }
         }
-
         stage('Development') {
             when {
                 branch 'development'
-            } //when
+            }
             steps {
                 slack_send("Development: Building :coding: ")
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
                     sh "serverless deploy --stage development"
-                    // URL="$(serverless info --verbose --stage development | grep ServiceEndpoint | sed s/ServiceEndpoint\:\ //g)"
                     slack_send("Development: Deployed successfully. :heavy_check_mark")
                 }
             }
-        } //development build
-
+        }
         stage('Staging') {
             when {
                 branch 'staging'
-            } //when
+            }
             steps {
                 slack_send("Staging: Building :coding: ")
                 sh 'mvn clean install'
@@ -56,12 +57,11 @@ pipeline {
                     slack_send("Staging: Deployed successfully. :heavy_check_mark")
                 }
             }
-        } //stage build
-
+        }
         stage('Production') {
             when {
                 branch 'master'
-            } //when
+            }
             steps {
                 slack_send("Production: Building :coding:")
                 sh 'mvn clean install'
@@ -69,8 +69,8 @@ pipeline {
                     sh "serverless deploy --stage production"
                 }
             }
-        } //Production build
-    } //stages
+        }
+    }
 
     post {
         always {
@@ -86,7 +86,7 @@ pipeline {
         failure {
             slack_send("${env.BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
         }
-    } //post
+    }
 }
 
 def slack_send(slackMessage, messageColor = "good") {
