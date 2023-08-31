@@ -12,10 +12,8 @@ pipeline {
                     //send slack notification of new commit
                     slack_send(slackMessage)
                     //if commit message contains skip ci
-                       if (commitContainsSkip.toInteger() > 0) { // Changed this condition
                         skippingText = " Skipping Build for ${env.BRANCH_NAME} branch."
                         env.shouldBuild = false
-                        currentBuild.result = 'ABORTED'
                         slack_send(skippingText, "warning")
                         error('BUILD SKIPPED')
                     }
