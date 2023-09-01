@@ -10,19 +10,16 @@ pipeline {
     }
 
     stages {
-        stage('Debug') {
-            steps {
-                sh 'echo "Environment:"'
-                sh 'printenv'
-                sh 'echo "Installed Packages:"'
-                sh 'npm list'
-            }
-        }
-
         stage('Cleanup') {
             steps {
                 echo "Current branch: ${env.BRANCH_NAME}"
                 sh 'npm cache clean -f'
+            }
+        }
+
+        stage('Remove node_modules') {
+            steps {
+                sh 'rm -rf node_modules'
             }
         }
 
@@ -32,30 +29,10 @@ pipeline {
             }
         }
 
-        stage('Install') {
+        stage('Install Dependencies') {
             steps {
                 echo "Current branch: ${env.BRANCH_NAME}"
-                script {
-                    def currentBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                    if (currentBranch != 'development') {
-                        sh 'git checkout development'
-                    }
-
-                    def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
-                    if (serverlessInstalled != 0) {
-                        sh 'npm install -g serverless'
-                    } else {
-                        echo 'serverless is already installed globally'
-                    }
-                }
-            }
-        }
-
-        stage('Clean and Reinstall Dependencies') {
-            steps {
-                sh 'rm -rf node_modules'
                 sh 'npm install'
-                sh 'npm install express@^4.17.1' // Explicitly install express
             }
         }
 
