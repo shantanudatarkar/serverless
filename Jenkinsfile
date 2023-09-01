@@ -18,6 +18,7 @@ pipeline {
                 echo "Current branch: ${env.BRANCH_NAME}"
                 script {
                     def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
+                       sh 'git checkout development'
                     if (serverlessInstalled != 0) {
                         sh 'npm install -g serverless'
                     } else {
@@ -38,7 +39,9 @@ pipeline {
         }
 
         stage('Development') {
-            steps {
+           when {
+              branch 'development'
+            steps 
               script {
                 expression { env.BRANCH_NAME == 'development' }           
                 echo "Current branch: ${env.BRANCH_NAME}"
