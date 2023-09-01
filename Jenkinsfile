@@ -1,12 +1,12 @@
 pipeline {
     agent any
 
-
-tools {
+    tools {
         // Use the name you provided in the Global Tool Configuration
         nodejs "nodejs"
-    }           
-   stages {
+    }
+
+    stages {
         stage('Install') {
             steps {
                 //slack_send("npm install serverless")
@@ -20,6 +20,7 @@ tools {
                 sh 'npm install -g serverless-plugin-log-retention' // Corrected plugin name
                 sh 'npm install -g serverless-stage-manager'
                 sh 'npm install -g serverless-enable-api-logs'
+            }
         }
         stage('Development') {
             when {
