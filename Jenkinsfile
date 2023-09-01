@@ -67,7 +67,7 @@ pipeline {
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
                     sh "serverless deploy --stage staging"
-                    slack_send("Staging: Deployed successfully. :heavy_check_mark")
+                    //slack_send("Staging: Deployed successfully. :heavy_check_mark")
                 }
             }
         }
