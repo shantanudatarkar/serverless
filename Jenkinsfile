@@ -16,11 +16,10 @@ tools {
         stage('Install Plugin') {
             steps {
                 //slack_send("Installing Plugins")
-                sh 'serverless plugin install -n serverless-offline'
-                sh 'serverless plugin install -n serverless-plugin-log-reatention'
-                sh 'serverless plugin install -n serverless-stage-manager'
-                sh 'serverless plugin install -n serverless-enable-api-logs'
-            }
+                sh 'npm install -g serverless-offline'
+                sh 'npm install -g serverless-plugin-log-retention' // Corrected plugin name
+                sh 'npm install -g serverless-stage-manager'
+                sh 'npm install -g serverless-enable-api-logs'
         }
         stage('Development') {
             when {
