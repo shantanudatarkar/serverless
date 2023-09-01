@@ -2,21 +2,6 @@ pipeline {
     agent any
 
     stages {
-        stage('Init') {
-            steps {
-                script {
-                    lastCommitInfo = sh(script: "git log -1 --pretty=%B", returnStdout: true).trim()
-                    slackMessage = "${env.JOB_NAME} ${env.BRANCH_NAME} received a new commit. :java: \nHere is commit info: ${lastCommitInfo}\n*Console Output*: <${BUILD_URL}/console | (Open)>"
-                    //send slack notification of new commit
-                    slack_send(slackMessage)
-
-                    if (lastCommitInfo.toLowerCase().contains('skip ci')) {
-                        currentBuild.result = 'ABORTED'
-                        error('Build skipped due to commit message')
-                    }
-                }
-            }
-        }
         stage('Install') {
             steps {
                 slack_send("npm install serverless")
@@ -27,7 +12,7 @@ pipeline {
             steps {
                 slack_send("Installing Plugins")
                 sh 'serverless plugin install -n serverless-offline'
-                sh 'serverless plugin install -n serverless-plugin-log-retention'
+                sh 'serverless plugin install -n serverless-plugin-log-reatention'
                 sh 'serverless plugin install -n serverless-stage-manager'
                 sh 'serverless plugin install -n serverless-enable-api-logs'
             }
