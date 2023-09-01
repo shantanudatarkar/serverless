@@ -38,18 +38,17 @@ pipeline {
         }
 
         stage('Development') {
-            when {
-                expression { env.BRANCH_NAME == 'development' }
-            }
             steps {
+              script {
+                expression { env.BRANCH_NAME == 'development' }           
                 echo "Current branch: ${env.BRANCH_NAME}"
                 sh 'mvn clean install'
                 withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
-                    sh "serverless deploy --stage development"
+                sh "serverless deploy --stage development"
                 }
             }
         }
-
+    }
         stage('Staging') {
             when {
                 expression { env.BRANCH_NAME == 'staging' }
