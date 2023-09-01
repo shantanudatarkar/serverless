@@ -10,11 +10,16 @@ pipeline {
         stage('Install') {
             steps {
                 //slack_send("npm install serverless")
-                sh 'npm cache clean -f'
-
                 sh 'npm install -g serverless'
             }
         }
+        
+        stage('Cleanup') {
+            steps {
+                sh 'npm cache clean -f'
+            }
+        }
+        
         stage('Install Plugin') {
             steps {
                 //slack_send("Installing Plugins")
