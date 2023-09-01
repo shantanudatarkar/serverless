@@ -4,7 +4,7 @@ pipeline {
     environment {
         BRANCH_NAME = 'development'
     }
-    
+
     tools {
         nodejs "nodejs"
     }
