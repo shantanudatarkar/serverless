@@ -55,6 +55,7 @@ pipeline {
             steps {
                 sh 'rm -rf node_modules'
                 sh 'npm install'
+                sh 'npm install express@^4.17.1' // Explicitly install express
             }
         }
 
