@@ -10,10 +10,25 @@ pipeline {
     }
 
     stages {
+        stage('Debug') {
+            steps {
+                sh 'echo "Environment:"'
+                sh 'printenv'
+                sh 'echo "Installed Packages:"'
+                sh 'npm list'
+            }
+        }
+
         stage('Cleanup') {
             steps {
                 echo "Current branch: ${env.BRANCH_NAME}"
                 sh 'npm cache clean -f'
+            }
+        }
+
+        stage('Install AWS SDK') {
+            steps {
+                sh 'npm install aws-sdk'
             }
         }
 
@@ -36,13 +51,10 @@ pipeline {
             }
         }
 
-        stage('Install Plugin') {
+        stage('Clean and Reinstall Dependencies') {
             steps {
-                echo "Current branch: ${env.BRANCH_NAME}"
-                sh 'npm install -g serverless-offline'
-                sh 'npm install -g serverless-plugin-log-retention'
-                sh 'npm install -g serverless-stage-manager'
-                sh 'npm install -g serverless-enable-api-logs'
+                sh 'rm -rf node_modules'
+                sh 'npm install'
             }
         }
 
