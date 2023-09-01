@@ -27,11 +27,11 @@ pipeline {
                 branch 'development'
             }
             steps {
-                slack_send("Development: Building :coding: ")
+                //slack_send("Development: Building :coding: ")
                 sh 'mvn clean install'
-                withAWS(credentials: 'aws-key', region: "ap-south-1") {
+                withCredentials'([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>])' {
                     sh "serverless deploy --stage development"
-                    slack_send("Development: Deployed successfully. :heavy_check_mark")
+                    //slack_send("Development: Deployed successfully. :heavy_check_mark")
                 }
             }
         }
