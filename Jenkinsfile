@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        BRANCH_NAME = 'development'
+    }
+    
     tools {
         nodejs "nodejs"
     }
@@ -21,7 +25,7 @@ pipeline {
                     if (currentBranch != 'development') {
                         sh 'git checkout development'
                     }
-                    
+
                     def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
                     if (serverlessInstalled != 0) {
                         sh 'npm install -g serverless'
@@ -44,14 +48,19 @@ pipeline {
 
         stage('Development') {
             when {
-                expression { env.BRANCH_NAME == 'development' }
+                expression { BRANCH_NAME == 'development' }
             }
             steps {
                 script {
-                    echo "Current branch: ${env.BRANCH_NAME}"
+                    echo "Current branch: ${BRANCH_NAME}"
                     sh 'mvn clean install'
                     withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
-                        sh "serverless deploy --stage development"
+                        def deployResult = sh(script: "serverless deploy --stage development", returnStatus: true)
+                        if (deployResult == 0) {
+                            currentBuild.result = 'SUCCESS'
+                        } else {
+                            currentBuild.result = 'FAILURE'
+                        }
                     }
                 }
             }
@@ -59,10 +68,10 @@ pipeline {
 
         stage('Staging') {
             when {
-                expression { env.BRANCH_NAME == 'staging' }
+                expression { BRANCH_NAME == 'staging' }
             }
             steps {
-                echo "Current branch: ${env.BRANCH_NAME}"
+                echo "Current branch: ${BRANCH_NAME}"
                 slack_send("Staging: Building :coding: ")
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
@@ -74,10 +83,10 @@ pipeline {
 
         stage('Production') {
             when {
-                expression { env.BRANCH_NAME == 'master' }
+                expression { BRANCH_NAME == 'master' }
             }
             steps {
-                echo "Current branch: ${env.BRANCH_NAME}"
+                echo "Current branch: ${BRANCH_NAME}"
                 slack_send("Production: Building :coding:")
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
@@ -93,13 +102,13 @@ pipeline {
             deleteDir()
         }
         success {
-            slack_send("${env.BRANCH_NAME} Build Completed Successfully. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "#0066FF")
+            slack_send("${BRANCH_NAME} Build Completed Successfully. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "#0066FF")
         }
         aborted {
             slack_send("Jenkins build Skipped/Aborted.", "warning")
         }
         failure {
-            slack_send("${env.BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
+            slack_send("${BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
         }
     }
 }
