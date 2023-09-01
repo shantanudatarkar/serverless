@@ -17,16 +17,16 @@ pipeline {
             steps {
                 echo "Current branch: ${env.BRANCH_NAME}"
                 script {
-                        def currentBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
-                        if (currentBranch != 'development') {
+                    def currentBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                    if (currentBranch != 'development') {
                         sh 'git checkout development'
-        }
-            
-                       def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
-                       if (serverlessInstalled != 0) {
-                       sh 'npm install -g serverless'
-                      } else {
-                       echo 'serverless is already installed globally'
+                    }
+                    
+                    def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
+                    if (serverlessInstalled != 0) {
+                        sh 'npm install -g serverless'
+                    } else {
+                        echo 'serverless is already installed globally'
                     }
                 }
             }
@@ -43,19 +43,20 @@ pipeline {
         }
 
         stage('Development') {
-           when {
-              branch 'development'
-            steps 
-              script {
-                expression { env.BRANCH_NAME == 'development' }           
-                echo "Current branch: ${env.BRANCH_NAME}"
-                sh 'mvn clean install'
-                withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
-                sh "serverless deploy --stage development"
+            when {
+                expression { env.BRANCH_NAME == 'development' }
+            }
+            steps {
+                script {
+                    echo "Current branch: ${env.BRANCH_NAME}"
+                    sh 'mvn clean install'
+                    withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
+                        sh "serverless deploy --stage development"
+                    }
                 }
             }
         }
-    }
+
         stage('Staging') {
             when {
                 expression { env.BRANCH_NAME == 'staging' }
