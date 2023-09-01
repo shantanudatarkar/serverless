@@ -9,7 +9,6 @@ pipeline {
     stages {
         stage('Cleanup') {
             steps {
-                sh'apt update -y'
                 sh 'npm cache clean -f'
             }
         }
