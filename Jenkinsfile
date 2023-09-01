@@ -40,8 +40,8 @@ pipeline {
                 branch 'development'
             }
             steps {
-                sh 'mvn clean install'
-                withCredentials([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>]) {
+                    sh 'mvn clean install'
+                    withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
                     sh "serverless deploy --stage development"
                 }
             }
