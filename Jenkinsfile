@@ -5,6 +5,12 @@ pipeline {
         // Use the name you provided in the Global Tool Configuration
         nodejs "nodejs"
     }
+    
+    stage('Cleanup') {
+            steps {
+                sh 'npm cache clean -f'
+            }
+        }
 
     stages {
         stage('Install') {
@@ -13,13 +19,7 @@ pipeline {
                 sh 'npm install -g serverless'
             }
         }
-        
-        stage('Cleanup') {
-            steps {
-                sh 'npm cache clean -f'
-            }
-        }
-        
+           
         stage('Install Plugin') {
             steps {
                 //slack_send("Installing Plugins")
