@@ -15,7 +15,14 @@ pipeline {
 
         stage('Install') {
             steps {
-                sh 'npm install -g serverless'
+                script {
+                    def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
+                    if (serverlessInstalled != 0) {
+                        sh 'npm install -g serverless'
+                    } else {
+                        echo 'serverless is already installed globally'
+                    }
+                }
             }
         }
 
@@ -34,7 +41,7 @@ pipeline {
             }
             steps {
                 sh 'mvn clean install'
-                withCredentials'([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>])' {
+                withCredentials([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>]) {
                     sh "serverless deploy --stage development"
                 }
             }
