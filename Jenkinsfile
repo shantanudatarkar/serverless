@@ -44,7 +44,10 @@ pipeline {
                 script {
                     echo "Current branch: ${BRANCH_NAME}"
                     sh 'mvn clean install'
+                     sh 'npm install -g aws-sdk'
+                    sh 'serverless --clear-caches'
                     sh "serverless deploy --stage development"
+
                     withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
                         def deployResult = sh(script: "serverless deploy --stage development", returnStatus: true)
                         if (deployResult == 0) {
@@ -67,7 +70,7 @@ pipeline {
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
                     sh "serverless deploy --stage staging"
-                    slack_send("Staging: Deployed successfully. :heavy_check_mark")
+                    //slack_send("Staging: Deployed successfully. :heavy_check_mark")
                 }
             }
         }
