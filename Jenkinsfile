@@ -1,7 +1,12 @@
 pipeline {
     agent any
 
-    stages {
+
+tools {
+        // Use the name you provided in the Global Tool Configuration
+        nodejs "nodejs"
+    }           
+   stages {
         stage('Install') {
             steps {
                 //slack_send("npm install serverless")
