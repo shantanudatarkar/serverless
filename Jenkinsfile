@@ -1,59 +1,68 @@
 pipeline {
     agent any
 
+    environment {
+        BRANCH_NAME = 'development'
+    }
+
     tools {
-        // Use the name you provided in the Global Tool Configuration
         nodejs "nodejs"
     }
 
     stages {
         stage('Cleanup') {
             steps {
+                echo "Current branch: ${env.BRANCH_NAME}"
                 sh 'npm cache clean -f'
             }
         }
 
-        stage('Install') {
+        stage('Remove node_modules') {
             steps {
-                script {
-                    def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
-                    if (serverlessInstalled != 0) {
-                        sh 'npm install -g serverless'
-                    } else {
-                        echo 'serverless is already installed globally'
-                    }
-                }
+                sh 'rm -rf node_modules'
             }
         }
 
-        stage('Install Plugin') {
+        stage('Install AWS SDK') {
             steps {
-                sh 'npm install -g serverless-offline'
-                sh 'npm install -g serverless-plugin-log-retention' // Corrected plugin name
-                sh 'npm install -g serverless-stage-manager'
-                sh 'npm install -g serverless-enable-api-logs'
+                sh 'npm install aws-sdk'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo "Current branch: ${env.BRANCH_NAME}"
+                sh 'npm install'
             }
         }
 
         stage('Development') {
             when {
-                branch 'development'
+                expression { BRANCH_NAME == 'development' }
             }
             steps {
-              script { 
-                 echo "Current branch: ${env.BRANCH_NAME}"
-                  sh 'mvn clean install'
-                    withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
+                script {
+                    echo "Current branch: ${BRANCH_NAME}"
+                    sh 'mvn clean install'
                     sh "serverless deploy --stage development"
+                    withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
+                        def deployResult = sh(script: "serverless deploy --stage development", returnStatus: true)
+                        if (deployResult == 0) {
+                            currentBuild.result = 'SUCCESS'
+                        } else {
+                            currentBuild.result = 'FAILURE'
+                        }
+                    }
                 }
             }
         }
-    }
+
         stage('Staging') {
             when {
-                branch 'staging'
+                expression { BRANCH_NAME == 'staging' }
             }
             steps {
+                echo "Current branch: ${BRANCH_NAME}"
                 slack_send("Staging: Building :coding: ")
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
@@ -65,9 +74,10 @@ pipeline {
 
         stage('Production') {
             when {
-                branch 'master'
+                expression { BRANCH_NAME == 'master' }
             }
             steps {
+                echo "Current branch: ${BRANCH_NAME}"
                 slack_send("Production: Building :coding:")
                 sh 'mvn clean install'
                 withAWS(credentials: 'aws-key', region: "ap-south-1") {
@@ -83,13 +93,13 @@ pipeline {
             deleteDir()
         }
         success {
-            slack_send("${env.BRANCH_NAME} Build Completed Successfully. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "#0066FF")
+            slack_send("${BRANCH_NAME} Build Completed Successfully. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "#0066FF")
         }
         aborted {
             slack_send("Jenkins build Skipped/Aborted.", "warning")
         }
         failure {
-            slack_send("${env.BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
+            slack_send("${BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
         }
     }
 }
