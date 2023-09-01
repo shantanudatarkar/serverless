@@ -45,6 +45,10 @@ pipeline {
                     echo "Current branch: ${BRANCH_NAME}"
                     sh 'mvn clean install'
                      sh 'npm install -g aws-sdk'
+                     
+                   // Set NODE_OPTIONS to exclude 'window'
+                    env.NODE_OPTIONS = '--no-global' 
+                    
                     sh 'serverless --clear-caches'
                     sh "serverless deploy --stage development"
 
