@@ -17,12 +17,16 @@ pipeline {
             steps {
                 echo "Current branch: ${env.BRANCH_NAME}"
                 script {
-                    def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
-                       sh 'git checkout development'
-                    if (serverlessInstalled != 0) {
-                        sh 'npm install -g serverless'
-                    } else {
-                        echo 'serverless is already installed globally'
+                        def currentBranch = sh(script: 'git rev-parse --abbrev-ref HEAD', returnStdout: true).trim()
+                        if (currentBranch != 'development') {
+                        sh 'git checkout development'
+        }
+            
+                       def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
+                       if (serverlessInstalled != 0) {
+                       sh 'npm install -g serverless'
+                      } else {
+                       echo 'serverless is already installed globally'
                     }
                 }
             }
