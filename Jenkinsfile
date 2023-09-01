@@ -5,43 +5,41 @@ pipeline {
         // Use the name you provided in the Global Tool Configuration
         nodejs "nodejs"
     }
-    
-    stage('Cleanup') {
+
+    stages {
+        stage('Cleanup') {
             steps {
                 sh 'npm cache clean -f'
             }
         }
 
-    stages {
         stage('Install') {
             steps {
-                //slack_send("npm install serverless")
                 sh 'npm install -g serverless'
             }
         }
-           
+
         stage('Install Plugin') {
             steps {
-                //slack_send("Installing Plugins")
                 sh 'npm install -g serverless-offline'
                 sh 'npm install -g serverless-plugin-log-retention' // Corrected plugin name
                 sh 'npm install -g serverless-stage-manager'
                 sh 'npm install -g serverless-enable-api-logs'
             }
         }
+
         stage('Development') {
             when {
                 branch 'development'
             }
             steps {
-                //slack_send("Development: Building :coding: ")
                 sh 'mvn clean install'
                 withCredentials'([<object of type com.cloudbees.jenkins.plugins.awscredentials.AmazonWebServicesCredentialsBinding>])' {
                     sh "serverless deploy --stage development"
-                    //slack_send("Development: Deployed successfully. :heavy_check_mark")
                 }
             }
         }
+
         stage('Staging') {
             when {
                 branch 'staging'
@@ -55,6 +53,7 @@ pipeline {
                 }
             }
         }
+
         stage('Production') {
             when {
                 branch 'master'
