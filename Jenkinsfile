@@ -16,6 +16,7 @@ pipeline {
         stage('Install') {
             steps {
                 script {
+                    echo "Current branch: ${env.BRANCH_NAME}"
                     def serverlessInstalled = sh(script: 'npm list -g --depth=0 | grep -q serverless', returnStatus: true)
                     if (serverlessInstalled != 0) {
                         sh 'npm install -g serverless'
@@ -40,8 +41,6 @@ pipeline {
                 branch 'development'
             }
             steps {
-              script { 
-                 echo "Current branch: ${env.BRANCH_NAME}"
                   sh 'mvn clean install'
                     withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
                     sh "serverless deploy --stage development"
@@ -92,7 +91,7 @@ pipeline {
             slack_send("${env.BRANCH_NAME} Something went wrong. Build failed. Check here: Console Output*: <${BUILD_URL}/console | (Open)>", "danger")
         }
     }
-}
+
 
 def slack_send(slackMessage, messageColor = "good") {
     slackSend channel: slack_channel, color: messageColor, message: slackMessage, teamDomain: slack_teamDomain, tokenCredentialId: slack_token_cred_id, username: 'Jenkins'
