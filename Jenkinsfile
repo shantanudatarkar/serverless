@@ -5,7 +5,7 @@ pipeline {
         stage('Install') {
             steps {
                 //slack_send("npm install serverless")
-                sh 'sudo npm install -g serverless'
+                sh 'npm install -g serverless'
             }
         }
         stage('Install Plugin') {
