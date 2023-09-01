@@ -40,7 +40,9 @@ pipeline {
                 branch 'development'
             }
             steps {
-                    sh 'mvn clean install'
+              script { 
+                 echo "Current branch: ${env.BRANCH_NAME}"
+                  sh 'mvn clean install'
                     withCredentials([amazonWebCredentials(credentialsId: 'aws_cred', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', region: 'ap-south-1')]) {
                     sh "serverless deploy --stage development"
                 }
