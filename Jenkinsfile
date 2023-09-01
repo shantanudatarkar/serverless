@@ -48,7 +48,7 @@ pipeline {
                 }
             }
         }
-
+    }
         stage('Staging') {
             when {
                 branch 'staging'
